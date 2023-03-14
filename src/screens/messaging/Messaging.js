@@ -1,10 +1,14 @@
-import React, { useLayoutEffect, useState } from "react";
+import React, {useEffect, useLayoutEffect, useRef, useState} from "react";
 import { View, TextInput, Text, FlatList, Pressable, useWindowDimensions } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import MessageComponent from "../../components/MessageComponent";
 import { styles } from "../../utils/styles";
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { useNavigation } from "@react-navigation/native";
+import io from 'socket.io-client';
+import {GiftedChat} from "react-native-gifted-chat";
+import {getData} from "../../utils/deviceStorage";
+import uuid from "react-native-uuid";
 
 const Messaging = ({ route, navigation }) => {
     const [chatMessages, setChatMessages] = useState([
@@ -22,6 +26,9 @@ const Messaging = ({ route, navigation }) => {
         },
     ]);
     const [message, setMessage] = useState("");
+    // const [messages, setMessages] = useState([]);
+    const [username, setUsername] = useState("");
+    const socket = useRef(null)
     const [user, setUser] = useState("");
     const {width, height} = useWindowDimensions();
     // const navigation = useNavigation();
@@ -34,6 +41,28 @@ const Messaging = ({ route, navigation }) => {
         time: "07:50",
         user: "Tomer",
     }
+
+    useEffect(() => {
+        // socket.current = io('http://192.168.43.154:3001')
+        socket.current = io('https://chat.tonchrisgroup.com:3001')
+        socket.current.on('message', msg => {
+            console.log(msg)
+            // setMessages(previousMessages => GiftedChat.append(previousMessages, msg))
+        })
+    },[])
+
+    useEffect(() => {
+        getData('username')
+            .then(res => {
+                if (res && res != undefined){
+                    setUser(res?.toString())
+                }
+            })
+    },[])
+
+    useEffect(() => {
+        console.log({user})
+    },[user])
 
 //👇🏻 This function gets the username saved on AsyncStorage
     const getUsername = async () => {
@@ -54,6 +83,10 @@ const Messaging = ({ route, navigation }) => {
         getUsername()
     }, []);
 
+    useEffect(() => {
+        console.log({chatMessages})
+    },[chatMessages])
+
     /*👇🏻 
         This function gets the time the user sends a message, then 
         logs the username, message, and the timestamp to the console.
@@ -69,11 +102,28 @@ const Messaging = ({ route, navigation }) => {
                 ? `0${new Date().getMinutes()}`
                 : `${new Date().getMinutes()}`;
 
-        console.log({
-            message,
+        let msgObj = {
+            id: uuid.v4(),
+            text: message,
             user,
-            timestamp: { hour, mins },
+            time: `${hour}:${mins}`,
+        }
+
+        console.log({
+            id: uuid.v4(),
+            text: message,
+            user,
+            times: `${hour}:${mins}`,
         });
+
+        setChatMessages(prevState => [...prevState, msgObj])
+        socket.current.emit('message',msgObj)
+
+        socket.current.on('message', msg => {
+            console.log('Mudi msg:', msg)
+            // if (!JSON.stringify(messages).includes(msg))
+            setChatMessages(prevState => [...prevState, msg])
+        })
     };
 
     return (

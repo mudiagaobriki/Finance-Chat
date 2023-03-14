@@ -8,5 +8,9 @@ export default {
     PhoneContacts: "PhoneContacts",
     SettingsScreen: "SettingsScreen",
     Messaging: "Messaging",
-    
+    BasicDetails: "BasicDetails",
+    Address: "Address",
+    Account: "Account",
+    SetPin: "SetPin",
+    Wallet: "Wallet",
 }

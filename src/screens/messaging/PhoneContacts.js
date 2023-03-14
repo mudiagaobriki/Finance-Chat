@@ -1,5 +1,15 @@
-import React, { useEffect, useState } from "react";
-import { View, Text, Pressable, SafeAreaView, FlatList,PermissionsAndroid, useWindowDimensions, ActivityIndicator } from "react-native";
+import React, {useEffect, useRef, useState} from "react";
+import {
+    View,
+    Text,
+    Pressable,
+    SafeAreaView,
+    FlatList,
+    PermissionsAndroid,
+    useWindowDimensions,
+    ActivityIndicator,
+    TouchableOpacity
+} from "react-native";
 import {Feather} from '@expo/vector-icons';
 import ChatComponent from "../../components/ChatComponent";
 import { styles } from "../../utils/styles";
@@ -11,10 +21,12 @@ import io from "socket.io-client";
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { getData, storeData } from '../../utils/deviceStorage';
 import { allUsers, getUserByUsername, updateUser } from "../../utils/users"
+import * as Contacts from 'expo-contacts';
+// import * as uuid from "react-native-uuid";
 
-const socket = io.connect('http://loccalhost:4000');
+// const socket = io.connect('http://localhost:4000');
 
-console.log({socket})
+// console.log({socket})
 
 // console.log(Contacts)
 
@@ -26,47 +38,66 @@ const PhoneContacts = () => {
 
     const navigation = useNavigation();
     const [contacts, setContacts] = useState([])
-    const [isConnected, setIsConnected] = useState(socket.connected);
+    // const [isConnected, setIsConnected] = useState(socket.connected);
     const [lastPong, setLastPong] = useState(null);
     const [appUsers, setAppUsers] = useState([])
     const [loading, setLoading] = useState(true)
     const [username, setUsername] = useState('')
+    const [arrangedContacts, setArrangedContacts] = useState([])
+    const socket = useRef(null)
+
+    let myPhoneContacts = []
 
     const {width, height} = useWindowDimensions()
 
     useEffect(() => {
-        // allUsers()
-        // .then((u) => {
-        //     let k = [u[0]]
-        //     console.log("KKKK: ", k)
-        //     setAppUsers(k)
-        //     setLoading(false)
-        // })
-        setAppUsers([
-            {
-                name:  "Abasifreke",
-                number: '08012345678'
-            },
-            {
-                name:  "Bella",
-                number: '09138475839'
-            },
-            {
-                name:  "Olatunji",
-                number: '08138885831'
-            },
-           
-            // "Bella",
-            // "Bimbo",
-            // "Biodun",
-            // "Mike",
-            // "Olatunji"
-        ])
-        setLoading(false)
+        allUsers()
+        .then((u) => {
+            let k = u
+            // console.log("KKKK: ", k)
+            setAppUsers(k)
+            // setLoading(false)
+        })
     },[])
 
     useEffect(() => {
-        console.log(appUsers)
+        // socket.current = io('http://192.168.43.154:3001')
+        socket.current = io('https://chat.tonchrisgroup.com:3001')
+    },[])
+
+    // useEffect to rearrange contacts based on who has joined the app and who has not
+    useEffect(() => {
+        const intersection = contacts.filter(element => appUsers.indexOf(element) !== -1);
+        let joinedContacts = [];
+        for (let i=0; i<contacts?.length; i++){
+            if (appUsers?.includes(contacts[i][1]) || appUsers?.includes(contacts[i][1]?.replaceAll(' ','')) ||
+                appUsers?.includes(contacts[i][1]?.replaceAll('-','')) ||
+                appUsers?.includes(contacts[i][1]?.replace('0','+234')) ||
+                appUsers?.includes(contacts[i][1]?.replace('0','+2340')) ||
+                appUsers?.includes(contacts[i][1]?.replaceAll(' ','').replace('0','+234')) ||
+                appUsers?.includes(contacts[i][1]?.replaceAll(' ','').replace('0','+2340')) ||
+                appUsers?.includes(contacts[i][1]?.replaceAll('-','').replace('0','+234')) ||
+                appUsers?.includes(contacts[i][1]?.replaceAll('-','').replace('0','+2340')) ||
+                appUsers?.includes(contacts[i][1]?.trim())){
+                let cnt = contacts[i];
+                let oldContacts = contacts
+                oldContacts.splice(i, 1)
+                oldContacts.unshift(cnt)
+                joinedContacts.push(contacts[i])
+                setArrangedContacts(oldContacts)
+                setLoading(false)
+            }
+        }
+        // console.log({intersection})
+        // console.log({joinedContacts})
+    },[appUsers, contacts])
+
+    useEffect(() => {
+        console.log({arrangedContacts})
+    },[arrangedContacts])
+
+    useEffect(() => {
+        // console.log(appUsers)
     },[appUsers, loading])
 
     useEffect(() => {
@@ -82,8 +113,58 @@ const PhoneContacts = () => {
         // closeModal();
     };
 
+    useEffect(() => {
+        (async () => {
+            const contactsData = await getData('myContacts') // todo optimize with redux data
+
+            if (contactsData){
+                setContacts(JSON.parse(contactsData))
+                // console.log(JSON.parse(contactsData));
+                setLoading(false)
+            }
+            else{
+                const { status } = await Contacts.requestPermissionsAsync();
+                // console.log("Use effect ran");
+                if (status === 'granted') {
+                    const { data } = await Contacts.getContactsAsync({
+                        fields: [Contacts.Fields.Name, Contacts.Fields.PhoneNumbers],
+                    });
+
+                    if (data.length > 0) {
+                        let phoneContacts = data?.map(({name, phoneNumbers}) => ({name, phoneNumbers}) )
+
+                        // remove contacts without a phone number
+                        phoneContacts = phoneContacts?.filter(el => el?.phoneNumbers?.length > 0)
+                        phoneContacts = phoneContacts?.filter(el => el)
+                        let mmm = []
+                        for (let i=0; i<phoneContacts?.length; i++){
+                            phoneContacts[i]['phoneNumbers'] = phoneContacts[i]?.phoneNumbers[0]?.number
+                            mmm?.push([phoneContacts[i]['name'],phoneContacts[i]['phoneNumbers']])
+                        }
+                        setContacts(mmm)
+                        storeData('myContacts', JSON.stringify(mmm))
+                            .then(() => {
+                                // setLoading(false)
+                                console.log('contacts fetched')
+                            })
+                        // myPhoneContacts = phoneContacts;
+
+                        // console.log(mmm);
+                    }
+                    else{
+                        setLoading(false)
+                    }
+                }
+            }
+        })();
+    }, []);
+
+    useState(() => {
+        // console.log("Contacts: ", contacts)
+    },[contacts])
+
     const handleChat = (partnerId) => {
-        console.log({partnerId})
+        // console.log({partnerId})
         storeData('partner','+2348036718099')
         .then(res => {
             let payload = {
@@ -91,47 +172,42 @@ const PhoneContacts = () => {
             }
             updateUser(username,payload)
             .then(up => {
-                console.log({up})
-                console.log('Partner Updated Successfully');
+                // console.log({up})
+                // console.log('Partner Updated Successfully');
                 navigation.navigate(NavigationNames.Messaging)
             })
-
-            // let payloadForPartner = {
-            //     partner: username
-            // }
-            // updateUser(partnerId,payloadForPartner)
-            // .then(up => {
-            //     console.log({up})
-            //     console.log('Partner Updated Successfully for partner');
-            // })
-            // navigation.navigate(NavigationNames.Chat)
         })
     }
 
     return (
-        <SafeAreaView style={{flex: 1}}>
-        <ScrollView style={styles.chatscreen}>
-            <View style={[styles.chattopContainer,{borderRadius: 5}]}>
-                <View style={styles.chatheader}>
-                    <Text style={styles.chatheading}>Contacts</Text>
+        <SafeAreaView style={{flex: 1, paddingTop: 130}}>
+        <View style={styles.chatscreen}>
+            {/*<View style={[styles.chattopContainer,{borderRadius: 5, marginTop: 20}]}>*/}
+            {/*    <View style={styles.chatheader}>*/}
+            {/*        <Text style={styles.chatheading}>Contacts</Text>*/}
 
-            {/* 👇🏻 Logs "ButtonPressed" to the console when the icon is clicked */}
-                    <Pressable onPress={() => console.log("Button Pressed!")}>
-                        <Feather name='search' size={24} color='green' />
-                    </Pressable>
-                </View>
-            </View>
+            {/*/!* 👇🏻 Logs "ButtonPressed" to the console when the icon is clicked *!/*/}
+            {/*        <Pressable onPress={() => console.log("Button Pressed!")}>*/}
+            {/*            <Feather name='search' size={24} color='green' />*/}
+            {/*        </Pressable>*/}
+            {/*    </View>*/}
+            {/*</View>*/}
+            {/*<TouchableOpacity onPress={() => console.log('Pressed')}>*/}
+            {/*    <Text>Mudi</Text>*/}
+            {/*</TouchableOpacity>*/}
 
-           <View style={{display: 'none'}}>
-                {contacts.length > 0 ? (
+            {!loading && <View>
+                {/*<Text>{contacts?.length}</Text>*/}
+                {arrangedContacts?.length > 0 ? (
                     <FlatList
-                        data={contacts}
-                        renderItem={({ item }) => <ContactsComponent 
-                        item={item} 
-                        onPress = {() => handleCreateRoom()}
+                        data={arrangedContacts}
+                        renderItem={({ item, index }) => <ContactsComponent
+                        item={item}
+                        key={index}
+                        // onPress = {() => handleCreateRoom()}
                         />
                     }
-                        keyExtractor={(item) => item.id}
+                        // keyExtractor={(item) => item[0]}
                     />
                 ) : (
                     <View style={styles.chatemptyContainer}>
@@ -140,42 +216,14 @@ const PhoneContacts = () => {
                         {/* <Text>{contacts?.length}</Text> */}
                     </View>
                 )}
-            </View>
+            </View>}
             {loading && <View style={{justifyContent: 'center', alignItems: 'center'}}>
                 <ActivityIndicator size={30} color={'black'} />
             </View>}
             {!loading && <View style={styles.chatlistContainer}>
-                {/* <Text>{appUsers?.length}</Text> */}
-            {
-                appUsers?.length > 0 && appUsers?.map((u,i) => <Pressable style={styles.cchat} 
-                onPress={() => handleChat(u)} key={i}
-                >
-                    <Ionicons
-                        name='person-circle-outline'
-                        size={45}
-                        color='black'
-                        style={styles.cavatar}
-                    />
-        
-                    <View style={styles.crightContainer}>
-                        <View>
-                            {/* <Text style={styles.cusername}>{item.displayName}</Text> */}
-                            <Text style={styles.cusername}>{u?.name}</Text>
-        
-                            <Text style={styles.cmessage}>
-                                {u?.number}
-                            </Text>
-                        </View>
-                        <View>
-                            <Text style={styles.ctime}>
-                                {/* {messages?.time ? messages.time : "now"} */}
-                            </Text>
-                        </View>
-                    </View>
-                </Pressable>)
-            }
+
             </View>}
-        </ScrollView>
+        </View>
         <FAB
                 style={[styles.fab]}
                 small

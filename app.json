@@ -14,6 +14,21 @@
     "assetBundlePatterns": [
       "**/*"
     ],
+    "plugins": [
+      [
+        "expo-contacts",
+        {
+          "contactsPermission": "Allow Parrot to access your contacts."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Parrot to access your gallery.",
+          "cameraPermission": "Allow Parrot to access your camera."
+        }
+      ]
+    ],
     "ios": {
       "supportsTablet": true
     },

@@ -1,4 +1,4 @@
-import { View, Text, Pressable } from "react-native";
+import { View, Text, Pressable, useWindowDimensions } from "react-native";
 import React, { useLayoutEffect, useState } from "react";
 import {Ionicons} from "@expo/vector-icons";
 // import { useNavigation } from "@react-navigation/native";
@@ -7,6 +7,8 @@ import { styles } from "../utils/styles";
 const ContactsComponent = ({ item, onPress }) => {
     // const navigation = useNavigation();
     const [messages, setMessages] = useState({});
+
+    const { height, width } = useWindowDimensions();
 
     //👇🏻 Retrieves the last message in the array from the item prop
     // useLayoutEffect(() => {
@@ -22,7 +24,7 @@ const ContactsComponent = ({ item, onPress }) => {
     // };
 
     return (
-        <Pressable style={styles.cchat} 
+        <Pressable style={[styles.cchat,{width: width - 40, alignSelf: 'center'}]}
         onPress={onPress}
         >
             <Ionicons
@@ -35,10 +37,10 @@ const ContactsComponent = ({ item, onPress }) => {
             <View style={styles.crightContainer}>
                 <View>
                     {/* <Text style={styles.cusername}>{item.displayName}</Text> */}
-                    <Text style={styles.cusername}>{item?.name}</Text>
+                    <Text style={styles.cusername}>{item[0] != ""? item[0]: "No name"}</Text>
 
                     <Text style={styles.cmessage}>
-                        {item?.number ? item.number : "Tap to start chatting"}
+                        {item[1]?.replaceAll("-",'')}
                     </Text>
                 </View>
                 <View>

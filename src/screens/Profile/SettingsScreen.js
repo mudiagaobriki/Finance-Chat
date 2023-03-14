@@ -1,21 +1,40 @@
 import React, { useState, useEffect } from 'react';
-import { ScrollView, KeyboardAvoidingView, View, Text, StyleSheet, TextInput, useWindowDimensions, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { Image, ScrollView, KeyboardAvoidingView, View, Text, StyleSheet, TextInput, useWindowDimensions, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 // import { TouchableOpacity } from 'react-native-gesture-handler';
 import {Feather,Ionicons} from '@expo/vector-icons';
 import DropDownPicker from 'react-native-dropdown-picker';
 import { allUsers, getUserByUsername, updateUser } from "../../utils/users"
 import { Pressable } from 'react-native';
-import { useRoute } from '@react-navigation/native';
+import {useNavigation, useRoute} from '@react-navigation/native';
 import { getData } from '../../utils/deviceStorage';
+import * as ImagePicker from 'expo-image-picker';
+import NavigationNames from "../../navigation/NavigationNames";
 
-const ACCOUNT_TYPE = [
+const SECTIONS = [
 	{
-		key: 'savings',
-		goal: 'Savings',
+		text: 'My Wallet',
+		icon: 'wallet-outline',
+		navigatesTo: NavigationNames.Wallet,
 	},
 	{
-		key: 'current',
-		goal: 'Current',
+		text: 'Basic Details',
+		icon: 'people-circle-outline',
+		navigatesTo: NavigationNames.BasicDetails,
+	},
+	{
+		text: 'Address',
+		icon: 'location-outline',
+		navigatesTo: NavigationNames.Address,
+	},
+	{
+		text: 'Bank Account',
+		icon: 'cash-outline',
+		navigatesTo: NavigationNames.Account,
+	},
+	{
+		text: 'Pin & Security',
+		icon: 'lock-closed-outline',
+		navigatesTo: NavigationNames.SetPin,
 	},
 ];
 
@@ -39,6 +58,24 @@ const SettingsScreen = () => {
 	const [username, setUsername] = useState(route?.params?.username);
 	const [user, setUser] = useState({})
 	const [loading, setLoading] = useState(false)
+	const [image, setImage] = useState(null);
+	const navigation = useNavigation();
+
+	const pickImage = async () => {
+		// No permissions request is necessary for launching the image library
+		let result = await ImagePicker.launchImageLibraryAsync({
+			mediaTypes: ImagePicker.MediaTypeOptions.All,
+			allowsEditing: true,
+			aspect: [4, 3],
+			quality: 1,
+		});
+
+		console.log(result);
+
+		if (!result.canceled) {
+			setImage(result.assets[0].uri);
+		}
+	};
 
 	// console.log({route})
 
@@ -82,370 +119,59 @@ const SettingsScreen = () => {
 					setBalance(us?.balance)
 					setLoading(false)
 				})
-				// updateUser(`+234${res}`,{
-				// 	balance: 5000,
-				// 	bank: 'UBA',
-				// 	accountType: 'savings',
-				// 	accountName: 'Mudiaga Obriki A.',
-				// 	accountNumber: '2058339565'
-				// })
-				// .then(up => {
-				// 	console.log({up})
-				// })
-				
         })
     },[])
 
-	const onSaveBankDetails = () => {
-		let payload = {
-			balance: balance,
-			bank: bankName,
-			accountType: accountType,
-			accountName: accountName,
-			accountNumber: accountNumber
-		}
-		updateUser(username,payload)
-		.then(up => {
-			console.log({up})
-			Alert.alert('Parrot', 'Bank Details Updated Successfully');
-		})
-	}
-
-	const onFundWallet = () => {
-		let payload = {
-			balance: Number(balance) +  Number(fundingAmount),
-		}
-		updateUser(username,payload)
-		.then(up => {
-			console.log({up})
-			setBalance(payload?.balance)
-			setFundingAmount('')
-			Alert.alert('Parrot', 'Wallet funded successfully');
-		})
-	}
-
-	const onTransfer = () => {
-		console.log('Clicked')
-		console.log({transferUser})
-		let payload = {
-			balance: Number(balance) -  Number(transferAmount),
-		}
-		
-		getUserByUsername(transferUser)
-		.then(res => {
-			let payloadOtherUser = {
-				balance: Number(res?.balance) + Number(transferAmount)
-			}
-			updateUser(transferUser,payloadOtherUser)
-			.then(up => {
-				// console.log({up})
-				// setBalance(payload?.balance)
-				// setFundingAmount('')
-				// Alert.alert('Parrot', 'Wallet funded successfully');
-				updateUser(username,payload)
-				.then(up => {
-					console.log({up})
-					setBalance(payload?.balance)
-					setTransferAmount('')
-					setTransferUser('')
-					Alert.alert('Parrot', 'Transfer completed successfully');
-				})
-			})
-		})
-		
-	}
-
-	const onWithdrawalRequest = () => {
-		setWithdrawAmount('')
-		Alert.alert('Parrot', 'Withdrawal request send successfully')
-	}
-
 	return (
-		<ScrollView contentContainerStyle={{padding: 30}}>
+		<ScrollView contentContainerStyle={{padding: 30, paddingTop: 120}}>
 			<KeyboardAvoidingView behavior='position'>
-				<Ionicons name='person-circle-outline' size={100} color='black' style={{alignSelf: 'center'}} />
-				<View style={{alignItems:'center'}}>
-					<Text style={{fontSize: 24, fontWeight:'600'}}>Michael</Text>
-					<Text style={{fontSize: 20, fontWeight:'600', marginBottom: 20}}>09012345678</Text>
+				{image ? <Image source={{ uri: image }} style={{ width: 130, height: 130, borderRadius: 130, alignSelf: 'center' }} />:
+					<Image source={ require('../../assets/user-profile.png') } style={{ width: 130, height: 130, borderRadius: 130, alignSelf: 'center' }} />
+				}
+				<View style={{alignItems:'center', marginTop: 10}}>
+					<Text style={{fontSize: 18, fontWeight:'600'}}>Michael</Text>
+					<Text style={{fontSize: 14, fontWeight:'600', marginBottom: 0}}>09012345678</Text>
 				</View>
-				<View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems:'center'}}>
-				<View style={{alignItems: 'center'}}>
-					<Ionicons name="arrow-up-circle-outline"
-					size={50} color='green' />
-					<Text>Fund</Text>
-					</View>
-					<View style={{backgroundColor: 'transparent', 
-					justifyContent: 'center', 
-					alignItems: 'center', 
-					height: 100,
-					width: '50%'}}>
-						<Text style={{fontSize: 20, color: 'green', fontWeight: '700'}}>NGN {'50,000'}</Text>
-					</View>
-					<View style={{alignItems: 'center'}}>
-					<Ionicons name="arrow-down-circle-outline"
-					size={50} color='green' />
-					<Text>Withdraw</Text>
-					</View>
+				<View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', marginTop: 15, marginBottom: 10 }}>
+					<TouchableOpacity
+						style={{width: 150,
+							height: 40,
+							backgroundColor: 'black',
+							alignItems: 'center',
+							justifyContent: 'center',
+							borderRadius: 10,
+						}} onPress={pickImage}>
+						<Text style={{fontSize: 14, fontWeight: '600', color: 'white'}}>Update Image</Text>
+					</TouchableOpacity>
 				</View>
-			
-			{/* <View style={{marginTop: 30, flexDirection: 'row', justifyContent: 'space-between'}}>
-				<Pressable onPress={() => setActive('account')} style={{alignItems: 'center'}}>
-					<Feather name='user' size={26} color='green' />
-					<Text>My Account</Text>
-				</Pressable>
-				<Pressable onPress={() => setActive('funding')} style={{alignItems: 'center'}}>
-					<Feather name='upload' size={26} color='green' />
-					<Text onPress={() => setActive('funding')}>Funding</Text>
-				</Pressable>
-				<Pressable onPress={() => setActive('transfer')} style={{alignItems: 'center'}}>
-					<Feather name='user' size={26} color='green' />
-					<Text>Transfer</Text>
-				</Pressable>
-				<Pressable onPress={() => setActive('withdrawal')} style={{alignItems: 'center'}}>
-					<Feather name='download' size={26} color='green' />
-					<Text>Withdrawal</Text>
-				</Pressable>
-			</View> */}
 			{loading && <View style={{justifyContent: 'center', alignItems: 'center', marginTop: 40}}>
 				<ActivityIndicator size={30} color='green' />
 				</View>}
 			{!loading && <>
-			{active === 'account' && <View style={{marginTop: 30}}>
-				<View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
-					<Text>Name</Text>
-					<TextInput
-						style={[styles.textInput, {width: width - 160}]}
-						placeholder="First name and last name"
-						onChangeText={text => setBankName(text)}
-						value={bankName}
-						// keyboardType='text'
-					/>
-				</View>
-				<View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
-					<Text>Phone No</Text>
-					<TextInput
-						style={[styles.textInput, {width: width - 160}]}
-						placeholder="First name and last name"
-						onChangeText={text => setAccountType(text)}
-						value={accountType}
-						// keyboardType='text'
-					/>
-					{/* <TextInput
-						style={[styles.textInput, {width: width - 160}]}
-						placeholder="Account Type"
-						// keyboardType='numeric'
-					/> */}
-					{/* <View style={{ marginBottom: 10, minHeight: 30 }}>
-										<DropDownPicker
-											schema={{
-												label: 'goal', // required
-												value: 'key', // required
-												icon: 'icon',
-												parent: 'parent',
-												selectable: 'selectable',
-												disabled: 'disabled',
-											}}
-											listMode="MODAL"
-											// listMode="SCROLLVIEW"
-											placeholder="Select an answer"
-											//searchable={true}
-											placeholderStyle={{ color: 'darkgray' }}
-											labelStyle={{ color: 'darkgray' }}
-											// textStyle={{color: 'black'}}
-											modalTitle={'Account Type'}
-											open={showAccountPicker}
-											value={accountType}
-											// value={currentGender}
-											mode={'BADGE'}
-											theme={'DARK'}
-											items={ACCOUNT_TYPE}
-											setOpen={() => {
-												setShowAccountPicker(true);
-											}}
-											onClose={() => {
-												setShowAccountPicker(false);
-											}}
-											// @ts-ignore
-											setValue={async (val: Function) => {
-												const cc = val();
-												// doHandleNext(cc);
-												// console.log('xsxs', cc);
-
-												setAccountType(cc);
-											}}
-											style={[styles.textInput, { color:'black', width: width - 160, borderColor: 'transparent' }]}
-											dropDownContainerStyle={{
-												width: width - 160,
-												backgroundColor: '#e0e0e0',
-												zIndex: 5000,
-												borderWidth: 0,
-												borderColor: 'transparent',
-												color: 'black'
-											}}
-										/>
-									</View> */}
-				</View>
-				<View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
-					<Text>Acc. Name</Text>
-					<TextInput
-						style={[styles.textInput, {width: width - 160}]}
-						placeholder="Account Name"
-						onChangeText={text=>setAccountName(text)}
-						value={accountName}
-						// keyboardType='numeric'
-					/>
-				</View>
-				{/* <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
-					<Text>Acc. No</Text>
-					<TextInput
-						style={[styles.textInput, {width: width - 160}]}
-						placeholder="Account Number"
-						onChangeText={text=>setAccountName(text)}
-						value={accountName}
-						// keyboardType='numeric'
-					/>
-				</View> */}
-				<View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
-					<Text>Pin</Text>
-					<TextInput
-						style={[styles.textInput, {width: width - 160}]}
-						placeholder="Transaction Pin"
-						keyboardType='numeric'
-						onChangeText={text => setAccountNumber(text)}
-						value={accountNumber}
-					/>
-				</View>
-				<TouchableOpacity style={{width: width - 120, 
-					alignSelf: 'center', height: 55, backgroundColor: 'black',
-					 marginTop: 40, justifyContent: 'center', alignItems: 'center', borderRadius: 10}}>
-					<Text style={{color: 'white', fontWeight: '700'}}>Save</Text>
-				</TouchableOpacity>
-			</View>}
-			{active === 'funding' && <View style={{marginTop: 30}}>
-				<View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
-					<Text>Amount</Text>
-					<TextInput
-						style={[styles.textInput, {width: width - 160}]}
-						placeholder="Amount"
-						keyboardType='numeric'
-						value={fundingAmount}
-						onChangeText={text=>setFundingAmount(text)}
-					/>
-				</View>
-				<TouchableOpacity onPress={() => onFundWallet()} style={{width: width - 120, 
-					alignSelf: 'center', height: 55, backgroundColor: 'black',
-					 marginTop: 40, justifyContent: 'center', alignItems: 'center', borderRadius: 10}}>
-					<Text style={{color: 'white', fontWeight: '700'}}>Add to Wallet</Text>
-				</TouchableOpacity>
-			</View>}
-			{active === 'transfer' && <View style={{marginTop: 30}}>
-				{/* <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
-					<Text>Bank</Text>
-					<TextInput
-						style={[styles.textInput, {width: width - 160}]}
-						placeholder="Bank Name"
-						onChangeText={text => setBankName(text)}
-						// keyboardType='text'
-					/>
-				</View> */}
-				<View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
-					<Text>User</Text>
-					{/* <TextInput
-						style={[styles.textInput, {width: width - 160}]}
-						placeholder="Account Type"
-						// keyboardType='numeric'
-					/> */}
-					<View style={{ marginBottom: 10, minHeight: 30 }}>
-										<DropDownPicker
-											schema={{
-												label: 'goal', // required
-												value: 'key', // required
-												icon: 'icon',
-												parent: 'parent',
-												selectable: 'selectable',
-												disabled: 'disabled',
-											}}
-											listMode="MODAL"
-											searchable
-											// listMode="SCROLLVIEW"
-											placeholder="Select a user"
-											//searchable={true}
-											placeholderStyle={{ color: 'darkgray' }}
-											labelStyle={{ color: 'darkgray' }}
-											// textStyle={{color: 'black'}}
-											modalTitle={'Users'}
-											open={showTransferPicker}
-											value={transferUser}
-											// value={currentGender}
-											mode={'BADGE'}
-											theme={'DARK'}
-											items={appUsers}
-											setOpen={() => {
-												setShowTransferPicker(true);
-											}}
-											onClose={() => {
-												setShowTransferPicker(false);
-											}}
-											// @ts-ignore
-											setValue={async (val: Function) => {
-												const cc = val();
-												// doHandleNext(cc);
-												// console.log('xsxs', cc);
-
-												setTransferUser(cc);
-											}}
-											style={[styles.textInput, { color:'black', width: width - 160, borderColor: 'transparent' }]}
-											dropDownContainerStyle={{
-												width: width - 160,
-												backgroundColor: '#e0e0e0',
-												zIndex: 5000,
-												borderWidth: 0,
-												borderColor: 'transparent',
-												color: 'black'
-											}}
-										/>
-									</View>
-				</View>
-				<View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
-					<Text>Amount</Text>
-					<TextInput
-						style={[styles.textInput, {width: width - 160}]}
-						placeholder="Amount"
-						onChangeText={text=>setTransferAmount(text)}
-						keyboardType='numeric'
-					/>
-				</View>
-				{/* <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
-					<Text>Number</Text>
-					<TextInput
-						style={[styles.textInput, {width: width - 160}]}
-						placeholder="Account Number"
-						keyboardType='numeric'
-						onChangeText={text => setAccountNumber(text)}
-					/>
-				</View> */}
-				<TouchableOpacity onPress={()=> onTransfer()} style={{width: width - 120, 
-					alignSelf: 'center', height: 55, backgroundColor: 'black',
-					 marginTop: 40, justifyContent: 'center', alignItems: 'center', borderRadius: 10}}>
-					<Text style={{color: 'white', fontWeight: '700'}}>Transfer</Text>
-				</TouchableOpacity>
-			</View>}
-			{active === 'withdrawal' && <View style={{marginTop: 30}}>
-				<View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
-					<Text>Amount</Text>
-					<TextInput
-						style={[styles.textInput, {width: width - 160}]}
-						placeholder="Amount"
-						keyboardType='numeric'
-						value={withdrawAmount}
-					/>
-				</View>
-				<TouchableOpacity onPress={() => onWithdrawalRequest()} style={{width: width - 120, 
-					alignSelf: 'center', height: 55, backgroundColor: 'black',
-					 marginTop: 40, justifyContent: 'center', alignItems: 'center', borderRadius: 10}}>
-					<Text style={{color: 'white', fontWeight: '700'}}>Request Withdrawal</Text>
-				</TouchableOpacity>
-			</View>}
+				<View style={{marginTop: 20}}></View>
+				{
+					SECTIONS?.map((item, index) =>
+						<View>
+							<TouchableOpacity
+								onPress={() => navigation.navigate(item.navigatesTo)}
+								style={{backgroundColor: 'transparent',
+								flexDirection: 'row',
+								height: 50,
+								width: width-60,
+								alignItems: 'center',
+								justifyContent: 'space-between',
+								paddingHorizontal: 15,
+								marginBottom: 10,
+							}}>
+								<View style={{flexDirection: 'row', alignItems: 'center'}}>
+									<Ionicons name={item?.icon} size={28} />
+									<Text style={{fontWeight: '600', fontSize: 16, marginLeft: 10}}>{item?.text}</Text>
+								</View>
+								<Ionicons name={'chevron-forward-outline'} size={28} />
+							</TouchableOpacity>
+						</View>
+					)
+				}
 			</>}
 			</KeyboardAvoidingView>
 		</ScrollView>

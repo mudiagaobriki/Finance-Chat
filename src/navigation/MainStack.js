@@ -6,121 +6,15 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import NavigationNames from './NavigationNames';
-import Splash from '../screens/intro/splash';
-import Login from '../screens/auth/Login';
-import PhoneSignup from '../screens/auth/PhoneSignup';
-import OTPConfirmation from '../screens/auth/OTPConfirmation';
-import Chat from '../screens/messaging/Chat';
-import MessagesList from '../screens/messaging/MessagesList';
-import PhoneContacts from '../screens/messaging/PhoneContacts';
 import SettingsScreen from '../screens/Profile/SettingsScreen';
-import Messaging from '../screens/messaging/Messaging';
 import Ionicons from '@expo/vector-icons/Ionicons'
+import ContactsStack from "./ContactsStack"
+import ChatsStack from "./ChatsStack"
+import ProfileStack from "./ProfileStack"
 
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
-
-function ChatsStack(){
-  return(
-        // <NavigationContainer>
-          <Stack.Navigator initialRouteName={NavigationNames.MessagesList}>
-            <Stack.Screen 
-            name={NavigationNames.Chat} 
-            component={Chat}
-            options={{
-                headerShown: true,
-                headerTitle: '',
-                headerTransparent: true,
-                headerBackVisible: false,
-            }} />
-            <Stack.Screen 
-            name={NavigationNames.MessagesList} 
-            component={MessagesList}
-            options={{
-                headerShown: true,
-                headerTitle: '',
-                headerTransparent: true,
-                headerBackVisible: false,
-            }} />
-            <Stack.Screen 
-            name={NavigationNames.PhoneContacts} 
-            component={PhoneContacts}
-            options={{
-                headerShown: true,
-                headerTitle: '',
-                headerTransparent: true,
-                headerBackVisible: false,
-            }} />
-            {/* <Stack.Screen 
-            name={NavigationNames.SettingsScreen} 
-            component={SettingsScreen}
-            options={{
-                headerShown: true,
-                headerTitle: '',
-                headerTransparent: true,
-                headerBackVisible: false,
-            }} /> */}
-            <Stack.Screen 
-            name={NavigationNames.Messaging} 
-            component={Messaging}
-            options={{
-                headerShown: true,
-                headerTitle: '',
-                headerTransparent: true,
-                headerBackVisible: false,
-            }} />
-          </Stack.Navigator>
-        // </NavigationContainer>
-  )
-}
-
-function ContactsStack(){
-  return(
-        // <NavigationContainer>
-          <Stack.Navigator initialRouteName={NavigationNames.PhoneContacts}>
-            {/* <Stack.Screen 
-            name={NavigationNames.MessagesList} 
-            component={MessagesList}
-            options={{
-                headerShown: true,
-                headerTitle: '',
-                headerTransparent: true,
-                headerBackVisible: false,
-            }} /> */}
-            <Stack.Screen 
-            name={NavigationNames.PhoneContacts} 
-            component={PhoneContacts}
-            options={{
-                headerShown: true,
-                headerTitle: '',
-                headerTransparent: true,
-                headerBackVisible: false,
-            }} />
-            
-            {/* <Stack.Screen 
-            name={NavigationNames.SettingsScreen} 
-            component={SettingsScreen}
-            options={{
-                headerShown: true,
-                headerTitle: '',
-                headerTransparent: true,
-                headerBackVisible: false,
-            }} /> */}
-            <Stack.Screen 
-            name={NavigationNames.Messaging} 
-            component={Messaging}
-            options={{
-                headerShown: true,
-                headerTitle: '',
-                headerTransparent: true,
-                headerBackVisible: false,
-            }} />
-          </Stack.Navigator>
-        // </NavigationContainer>
-  )
-}
-
 
 function MainStack() {
   return (
@@ -138,7 +32,7 @@ function MainStack() {
               } else if (route.name === 'ContactsStack') {
                 iconName = focused ? 'reader-outline' : 'reader-outline';
               }
-              else if (route.name === NavigationNames.SettingsScreen) {
+              else if (route.name === 'ProfileStack') {
                 iconName = focused ? 'person-circle-outline' : 'person-circle-outline';
               }
   
@@ -165,62 +59,13 @@ function MainStack() {
               title: 'Contacts',
               headerShown: false
             }} />
-            <Tab.Screen name={NavigationNames.SettingsScreen} component={SettingsScreen}
+            <Tab.Screen name={'ProfileStack'} component={ProfileStack}
             options={{
               title: 'Me',
               headerShown: false
             }} />
         </Tab.Navigator>
       </NavigationContainer>
-    // <NavigationContainer>
-    //   <Stack.Navigator initialRouteName={NavigationNames.MessagesList}>
-    //     <Stack.Screen 
-    //     name={NavigationNames.Chat} 
-    //     component={Chat}
-    //     options={{
-    //         headerShown: true,
-    //         headerTitle: '',
-    //         headerTransparent: true,
-    //         headerBackVisible: false,
-    //     }} />
-    //     <Stack.Screen 
-    //     name={NavigationNames.MessagesList} 
-    //     component={MessagesList}
-    //     options={{
-    //         headerShown: true,
-    //         headerTitle: '',
-    //         headerTransparent: true,
-    //         headerBackVisible: false,
-    //     }} />
-    //     <Stack.Screen 
-    //     name={NavigationNames.PhoneContacts} 
-    //     component={PhoneContacts}
-    //     options={{
-    //         headerShown: true,
-    //         headerTitle: '',
-    //         headerTransparent: true,
-    //         headerBackVisible: false,
-    //     }} />
-    //     <Stack.Screen 
-    //     name={NavigationNames.SettingsScreen} 
-    //     component={SettingsScreen}
-    //     options={{
-    //         headerShown: true,
-    //         headerTitle: '',
-    //         headerTransparent: true,
-    //         headerBackVisible: false,
-    //     }} />
-    //      <Stack.Screen 
-    //     name={NavigationNames.Messaging} 
-    //     component={Messaging}
-    //     options={{
-    //         headerShown: true,
-    //         headerTitle: '',
-    //         headerTransparent: true,
-    //         headerBackVisible: false,
-    //     }} />
-    //   </Stack.Navigator>
-    // </NavigationContainer>
   );
 }
 

@@ -9,7 +9,7 @@ import NavigationNames from "../../navigation/NavigationNames";
 import { getData } from "../../utils/deviceStorage";
 import { allUsers, getPartner } from "../../utils/users"
 import { Searchbar } from 'react-native-paper';
-// import io from 'socket.io-client';
+import io from 'socket.io-client';
 
 // import socket from "../../utils/socket";
 
@@ -21,7 +21,7 @@ const MessagesList = () => {
     const [partner, setPartner] = useState([])
     const [loading, setLoading] = useState(true)
     const [searchQuery, setSearchQuery] = useState('');
-    // const socket = useRef(null)
+    const socket = useRef(null)
     const { width, height } = useWindowDimensions()
     
     const onChangeSearch = query => setSearchQuery(query);
@@ -41,16 +41,6 @@ const MessagesList = () => {
         ])
         setLoading(false)
     },[])
-
-    // useEffect(() => {
-    //     getData('partner')
-    //     .then(res2 => {
-    //         console.log({res2})
-    //         if (res2 != null && res2 != undefined){
-    //             setPartner([res2])
-    //         }
-    //     })
-    // },[])
 
     //uncomment here
     // useEffect(() => {
@@ -115,9 +105,10 @@ const MessagesList = () => {
         // },
     ];
 
-    // useEffect(() => {
-    //     socket.current = io('http://192.168.43.154:3001')
-    // },[])
+    useEffect(() => {
+        // socket.current = io('http://192.168.43.154:3001')
+        socket.current = io('https://chat.tonchrisgroup.com:3001')
+    },[])
 
     const handleShowContacts = () => {
         //👇🏻 sends a message containing the group name to the server
@@ -130,17 +121,17 @@ const MessagesList = () => {
     };
 
     return (
-        <SafeAreaView style={styles.chatscreen}>
-            <View style={[styles.chattopContainer,{borderRadius: 5}]}>
-                <Pressable style={styles.chatheader}>
-                    <Text onPress={() => navigation.navigate(NavigationNames.SettingsScreen)} style={styles.chatheading}>Chats</Text>
+        <SafeAreaView style={[styles.chatscreen,{paddingTop: 150}]}>
+            {/*<View style={[styles.chattopContainer,{borderRadius: 5, marginTop: 20}]}>*/}
+            {/*    <Pressable style={styles.chatheader}>*/}
+            {/*        <Text onPress={() => navigation.navigate(NavigationNames.SettingsScreen)} style={styles.chatheading}>Chats</Text>*/}
 
-            {/* 👇🏻 Logs "ButtonPressed" to the console when the icon is clicked */}
-                    <TouchableOpacity onPress={() => console.log('Clicked...')}>
-                        <Feather name='search' size={26} color='green' onPress={() => console.log('Clicked')} />
-                    </TouchableOpacity>
-                </Pressable>
-            </View>
+            {/*/!* 👇🏻 Logs "ButtonPressed" to the console when the icon is clicked *!/*/}
+            {/*        <TouchableOpacity onPress={() => console.log('Clicked...')}>*/}
+            {/*            <Feather name='search' size={26} color='green' onPress={() => console.log('Clicked')} />*/}
+            {/*        </TouchableOpacity>*/}
+            {/*    </Pressable>*/}
+            {/*</View>*/}
             {/* <Searchbar
                 placeholder="Search"
                 onChangeText={onChangeSearch}

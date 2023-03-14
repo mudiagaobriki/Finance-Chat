@@ -19,11 +19,9 @@ export default function App() {
     //   <StatusBar style="auto" />
     // </View>
     <Provider store={store}>
-    <SafeAreaView style={{flex: 1, paddingTop: 35}}>
+    <SafeAreaView style={{flex: 1, paddingTop: 0}}>
       <StatusBar
         style='auto'
-        // barStyle={'dark-content'}
-        // backgroundColor="transparent"
       />
       <AppRoute />
     </SafeAreaView>
